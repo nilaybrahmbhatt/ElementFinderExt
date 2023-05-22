@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Finding Elements",
+  "version": "1.0",
+  "description": "An extension that displays selected text",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "index.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": ["*://*/*"]
+}

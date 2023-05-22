@@ -2,12 +2,49 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <title>Element Finder</title>
+    <style>
+      .container {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .btn-group {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      button {
+        display: flex;
+        padding: 4px 6px;
+        background: #ffff00;
+        width: 90px;
+        text-align: center;
+        border-radius: 6px;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div class="container">
+      <div class="btn-group">
+        <button id="nameBtn">Name</button>
+        <button id="positionBtn">Position</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <td>Name</td>
+            <td>Position</td>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <script src="./index.js" defer></script>
   </body>
 </html>
