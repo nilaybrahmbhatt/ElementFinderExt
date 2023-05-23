@@ -3,7 +3,6 @@ const positionBtn = document.getElementById("positionBtn");
 
 const getSelectedText = async () => {
   try {
-    let selected = window.document.getSelection();
     const getCommonElements = () => {
       let attributeNames = {};
       // Will add all the attributes to ${attributeNames} object
@@ -14,16 +13,50 @@ const getSelectedText = async () => {
             (attributeNames[el] =
               selected.anchorNode.parentElement.getAttribute(el))
         );
-        // 
+      //
       if (attributeNames.class) {
         console.log(
-          "calssname elements",
+          "classname elements",
           document.querySelectorAll(`.${attributeNames.class.split(" ")[0]}`)
+        );
+
+        return document.querySelectorAll(
+          `.${attributeNames.class.split(" ")[0]}`
         );
       }
     };
-    getCommonElements();
-    return selected.anchorNode.parentElement;
+
+    //below function takes a elment and returns xPath-string
+    const getXPath = (element) => {
+      if (element.id !== "") return 'id["' + element.id + '"]';
+      if (element === document.body) return element.tagName;
+
+      let ix = 0;
+      let siblings = element.parentNode.childNodes;
+      for (let i = 0; i < siblings.length; i++) {
+        let sibling = siblings[i];
+        if (sibling === element)
+          return (
+            getXPath(element.parentNode) +
+            "/" +
+            element.tagName +
+            "[" +
+            (ix + 1) +
+            "]"
+          );
+        if (sibling.nodeType === 1 && sibling.tagName === element.tagName) ix++;
+      }
+    };
+
+    const selected = window.document.getSelection();
+    const xPathToEl = getPathTo(selected.anchorNode.parentElement);
+
+    const toBeReturn = {
+      parent: selected.anchorNode.parentElement,
+      xPath: xPathToEl,
+    };
+
+    return toBeReturn;
   } catch (error) {
     console.log("error - ", error);
   }
