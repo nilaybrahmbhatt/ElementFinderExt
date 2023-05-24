@@ -10,8 +10,8 @@ const getSelectedText = async () => {
         .getAttributeNames()
         .forEach(
           (el) =>
-            (attributeNames[el] =
-              selected.anchorNode.parentElement.getAttribute(el))
+          (attributeNames[el] =
+            selected.anchorNode.parentElement.getAttribute(el))
         );
       //
       if (attributeNames.class) {
@@ -28,34 +28,96 @@ const getSelectedText = async () => {
 
     //below function takes a elment and returns xPath-string
     const getXPath = (element) => {
-      if (element.id !== "") return 'id["' + element.id + '"]';
-      if (element === document.body) return element.tagName;
+      const xpathSegments = [];
 
-      let ix = 0;
-      let siblings = element.parentNode.childNodes;
-      for (let i = 0; i < siblings.length; i++) {
-        let sibling = siblings[i];
-        if (sibling === element)
-          return (
-            getXPath(element.parentNode) +
-            "/" +
-            element.tagName +
-            "[" +
-            (ix + 1) +
-            "]"
-          );
-        if (sibling.nodeType === 1 && sibling.tagName === element.tagName) ix++;
+      // Iterate through ancestors
+      for (; element && element.nodeType === Node.ELEMENT_NODE; element = element.parentNode) {
+        let xpathSegment = element.tagName.toLowerCase();
+
+        if (element.hasAttribute('id')) {
+          // Use the element ID if available
+          xpathSegment += `[@id="${element.getAttribute('id')}"]`;
+          xpathSegments.unshift(xpathSegment);
+          break;
+        } else {
+          // Generate XPath index
+          let index = 1;
+          let sibling = element.previousSibling;
+
+          while (sibling) {
+            if (sibling.nodeType === Node.ELEMENT_NODE && sibling.tagName.toLowerCase() === element.tagName.toLowerCase()) {
+              index++;
+            }
+            sibling = sibling.previousSibling;
+          }
+
+          if (index > 1) {
+            xpathSegment += `[${index}]`;
+          }
+
+          xpathSegments.unshift(xpathSegment);
+        }
       }
-    };
+
+      return xpathSegments.length ? `//${xpathSegments.join('/')}` : null;
+
+    }
+
+    const findSimilarElements = (xpath, classes) => {
+
+      const allElements = document.getElementsByTagName("*");
+      const similarElements = [];
+
+      for (let i = 0; i < allElements.length; i++) {
+        const element = allElements[i];
+
+        const elementXpath = getXPath(element);
+        if (elementXpath.endsWith(xpath)) {
+          if (classes != '') {
+            if (element.className == classes) {
+              element.style.border = '2px solid blue'
+              similarElements.push(element);
+            }
+          } else {
+            similarElements.push(element);
+          }
+        }
+      }
+      return similarElements;
+    }
+
+    const LastXpath = (childXPath) => {
+      console.log({childXPath});
+      var allElements = childXPath.split('/').reverse();
+      // var lastElement = allElements.shift()
+      var parentIndex = allElements.findIndex((e,i) => {
+        console.log(i);
+        if(i > 0){
+          return e.indexOf('[') > -1
+        }else{
+          return false
+        }
+      })
+      console.log(parentIndex);
+      if (parentIndex > 0) {
+        allElements = allElements.splice(0, parentIndex)
+        var finalXpath = allElements.reverse().join('/');
+        console.log({finalXpath});
+        // console.log(getElementByXPath(finalXpath));
+        return finalXpath;
+      }
+    }
 
     const selected = window.document.getSelection();
-    const xPathToEl = getPathTo(selected.anchorNode.parentElement);
 
+    const xPathToEl = getXPath(selected.anchorNode.parentElement);
+
+    console.log(findSimilarElements(LastXpath(xPathToEl), selected.anchorNode.parentElement.className));
     const toBeReturn = {
       parent: selected.anchorNode.parentElement,
       xPath: xPathToEl,
     };
-
+    console.log(toBeReturn);
     return toBeReturn;
   } catch (error) {
     console.log("error - ", error);
