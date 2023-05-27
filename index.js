@@ -63,22 +63,18 @@ const getSelectedText = async () => {
 
     }
 
-    const findSimilarElements = (xpath, classes) => {
-
+    const findSimilarElements = (xpath, seletcedNode, childXpath) => {
+      const classes = seletcedNode.className
       const allElements = document.getElementsByTagName("*");
       const similarElements = [];
-
+      console.log(childXpath);
       for (let i = 0; i < allElements.length; i++) {
         const element = allElements[i];
-
         const elementXpath = getXPath(element);
-        if (elementXpath.endsWith(xpath)) {
-          if (classes != '') {
-            if (element.className == classes) {
-              element.style.border = '2px solid blue'
-              similarElements.push(element);
-            }
-          } else {
+        if (elementXpath.startsWith(xpath) && elementXpath.endsWith(childXpath)) {
+          console.log(elementXpath);
+          if (element.className == classes) {
+            element.style.border = '2px solid blue'
             similarElements.push(element);
           }
         }
@@ -87,32 +83,51 @@ const getSelectedText = async () => {
     }
 
     const LastXpath = (childXPath) => {
-      console.log({childXPath});
       var allElements = childXPath.split('/').reverse();
-      // var lastElement = allElements.shift()
-      var parentIndex = allElements.findIndex((e,i) => {
-        console.log(i);
-        if(i > 0){
-          return e.indexOf('[') > -1
-        }else{
-          return false
-        }
-      })
-      console.log(parentIndex);
+      var childPath = ''
+      //check the path has table 
+      if (allElements.findIndex((e, i) => {
+        console.log(e);
+        console.log(e.indexOf('td'));
+        return e.indexOf('td') > -1
+      }) > -1) {
+        // console.log('table is here');
+        var childPath = allElements.splice(0, allElements.findIndex((e, i) => {
+          return e.indexOf('td') > -1
+        }) + 1).join('/');
+        console.log({ childPath });
+        var parentIndex = allElements.findIndex((e, i) => {
+          // console.log(i);
+          if (i > 0) {
+            return e.indexOf('table') > -1
+          } else {
+            return false
+          }
+        })
+
+      } else {
+        // var lastElement = allElements.shift()
+        var parentIndex = allElements.findIndex((e, i) => {
+          // console.log(i);
+          if (i > 0) {
+            return e.indexOf('[') > -1
+          } else {
+            return false
+          }
+        })
+
+      }
       if (parentIndex > 0) {
-        allElements = allElements.splice(0, parentIndex)
+        allElements = allElements.splice(parentIndex)
         var finalXpath = allElements.reverse().join('/');
-        console.log({finalXpath});
-        // console.log(getElementByXPath(finalXpath));
-        return finalXpath;
+        return { finalXpath, childPath };
       }
     }
 
     const selected = window.document.getSelection();
-
     const xPathToEl = getXPath(selected.anchorNode.parentElement);
-
-    console.log(findSimilarElements(LastXpath(xPathToEl), selected.anchorNode.parentElement.className));
+    const parentElementXpath = LastXpath(xPathToEl);
+    console.log(findSimilarElements(parentElementXpath.finalXpath, selected.anchorNode.parentElement, parentElementXpath.childPath));
     const toBeReturn = {
       parent: selected.anchorNode.parentElement,
       xPath: xPathToEl,
