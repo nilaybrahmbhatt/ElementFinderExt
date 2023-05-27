@@ -67,7 +67,8 @@ const getSelectedText = async () => {
       const classes = seletcedNode.className
       const allElements = document.getElementsByTagName("*");
       const similarElements = [];
-      console.log(childXpath);
+      console.log(xpath, childXpath);
+      console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>');
       for (let i = 0; i < allElements.length; i++) {
         const element = allElements[i];
         const elementXpath = getXPath(element);
@@ -87,15 +88,12 @@ const getSelectedText = async () => {
       var childPath = ''
       //check the path has table 
       if (allElements.findIndex((e, i) => {
-        console.log(e);
-        console.log(e.indexOf('td'));
         return e.indexOf('td') > -1
       }) > -1) {
-        // console.log('table is here');
+        console.log('table is here');
         var childPath = allElements.splice(0, allElements.findIndex((e, i) => {
           return e.indexOf('td') > -1
         }) + 1).join('/');
-        console.log({ childPath });
         var parentIndex = allElements.findIndex((e, i) => {
           // console.log(i);
           if (i > 0) {
@@ -105,8 +103,26 @@ const getSelectedText = async () => {
           }
         })
 
+      } else if (allElements.findIndex((e, i) => {
+        return e.indexOf('li') > -1
+      }) > -1) {
+        console.log('list is here');
+        var childPath = allElements.splice(0, allElements.findIndex((e, i) => {
+          return e.indexOf('li') > -1
+        }) + 1).join('/');
+        var parentIndex = allElements.findIndex((e, i) => {
+          // console.log(i);
+          if (i > 0) {
+            return e.indexOf('ul') > -1
+          } else {
+            return false
+          }
+        })
+
       } else {
         // var lastElement = allElements.shift()
+        childPath = allElements.splice(0, 2).reverse().join('/');
+        console.log({ childPath });
         var parentIndex = allElements.findIndex((e, i) => {
           // console.log(i);
           if (i > 0) {
@@ -127,12 +143,15 @@ const getSelectedText = async () => {
     const selected = window.document.getSelection();
     const xPathToEl = getXPath(selected.anchorNode.parentElement);
     const parentElementXpath = LastXpath(xPathToEl);
-    console.log(findSimilarElements(parentElementXpath.finalXpath, selected.anchorNode.parentElement, parentElementXpath.childPath));
+    const allElements = findSimilarElements(parentElementXpath.finalXpath, selected.anchorNode.parentElement, parentElementXpath.childPath)
+    console.log(allElements);
     const toBeReturn = {
-      parent: selected.anchorNode.parentElement,
-      xPath: xPathToEl,
+      parent: parentElementXpath.finalXpath,
+      xPath: parentElementXpath.childPath,
+      allelements: allElements.map(e=>e.innerText )
     };
-    console.log(toBeReturn);
+    // chrome.runtime.sendMessage({ data: "Hello from content script!" });
+    // console.log(toBeReturn);
     return toBeReturn;
   } catch (error) {
     console.log("error - ", error);
@@ -141,14 +160,58 @@ const getSelectedText = async () => {
 
 nameBtn.addEventListener("click", async () => {
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  console.log("tabs - ", tab);
+  // console.log("tabs - ", tab);
   chrome.scripting.executeScript(
     {
       target: { tabId: tab.id },
       function: getSelectedText,
     },
     async (injectionResult) => {
-      console.log("is working ? - ", injectionResult);
+      // console.log("is working ? - ", injectionResult);
+      if(injectionResult && injectionResult[0] && injectionResult[0].result){
+          var result = injectionResult[0].result;
+          if(result && result.allelements){
+            const ulElement = document.getElementById('namelist');
+            result.allelements.forEach(item => {
+              console.log(item);
+              const liElement = document.createElement('li');
+              liElement.textContent = item;
+              ulElement.appendChild(liElement);
+            });
+            
+          }
+      }
+      
     }
   );
 });
+
+
+positionBtn.addEventListener("click", async () => {
+  let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  // console.log("tabs - ", tab);
+  chrome.scripting.executeScript(
+    {
+      target: { tabId: tab.id },
+      function: getSelectedText,
+    },
+    async (injectionResult) => {
+      // console.log("is working ? - ", injectionResult);
+      if(injectionResult && injectionResult[0] && injectionResult[0].result){
+          var result = injectionResult[0].result;
+          if(result && result.allelements){
+            const ulElement = document.getElementById('positionlist');
+            result.allelements.forEach(item => {
+              console.log(item);
+              const liElement = document.createElement('li');
+              liElement.textContent = item;
+              ulElement.appendChild(liElement);
+            });
+            
+          }
+      }
+      
+    }
+  );
+});
+
